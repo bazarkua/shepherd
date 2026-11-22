@@ -66,7 +66,7 @@ QUERY = {
     }
 }
 
-# What catrax-pathfinder 2.5.0's get_paths() returns: its own (TRAPI 1.x-like)
+# What catrax-pathfinder 3.1.0's get_paths() returns: its own (TRAPI 1.x-like)
 # result shape, which the worker builds 2.0 objects from; the KG is
 # Retriever's, passed through.
 PATHS_RESULT = (

@@ -59,7 +59,7 @@ class FakePathfinder:
         FakePathfinder.instances.append(self)
 
     def get_paths(self, **kwargs):
-        # the shapes catrax-pathfinder 2.5.0 returns (ResultPerPathConverter /
+        # the shapes catrax-pathfinder 3.1.0 returns (ResultPerPathConverter /
         # PathConverter): TRAPI 1.x-style binding lists and aux graphs
         self.calls.append(kwargs)
         result = {
