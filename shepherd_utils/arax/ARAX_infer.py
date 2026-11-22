@@ -1,25 +1,19 @@
 # Ported from RTXteam/RTX @ 9485431, code/ARAX/ARAXQuery/ARAX_infer.py.
 # Changes from upstream:
 #   - import paths / sys.path hacks only
-#   - the legacy xCRG action chemical_gene_regulation_graph_expansion is removed, with its
-#     parameter descriptors, command definition and the creativeCRG import (dead code,
-#     E-2, DEC-5); allowable_actions and describe_me list only
-#     drug_treatment_graph_expansion. The module docstring is upstream's, unchanged
 #   - main() is dropped
 #   - TRAPI 2.0: the unused QualifierConstraint import is dropped (the model no longer exists)
 # See docs/ARAX_PORT_BASELINE.md and shepherd_utils/arax/README.md.
 """
-ARAX Infer Module -- Inference engine for drug-disease treatment and chemical-gene regulation prediction.
+ARAX Infer Module -- Inference engine for drug-disease treatment prediction.
 
-This module provides two main inference actions:
+This module provides the following inference action:
   1. drug_treatment_graph_expansion: Predicts drug-disease treatment relationships using the xDTD model.
      Given a drug and/or disease CURIE, returns predicted treatment pairs with explanation paths.
-  2. chemical_gene_regulation_graph_expansion: Predicts chemical-gene regulation relationships using the xCRG model.
-     Given a chemical or gene CURIE, returns predicted regulation pairs with explanation paths.
 
 Notes:
   - The drug_treatment_graph_expansion action queries the precomputed xDTD prediction results that are stored in the ExplainableDTD database.
-  - The chemical_gene_regulation_graph_expansion action executes the xCRG model on the fly to predict the regulation relationship between chemicals and genes.
+  - Chemical-gene regulation (xCRG) has been moved to ARAX_connect.py (connect(action=xcrg)).
 
 """
 
@@ -47,9 +41,8 @@ class ARAXInfer:
     """
     ARAXInfer implements the ARAX 'infer' DSL command.
 
-    It supports two actions:
+    It supports the following action:
       - drug_treatment_graph_expansion: xDTD-based drug-disease treatment prediction
-      - chemical_gene_regulation_graph_expansion: xCRG-based chemical-gene regulation prediction
 
     Usage: ARAXInfer().apply(response, input_parameters)
     """
@@ -293,7 +286,7 @@ Valid disease categories: biolink:Disease, biolink:PhenotypicFeature.
         self.response.data['parameters'] = parameters
         self.parameters = parameters
 
-        # Dynamically dispatch to __drug_treatment_graph_expansion or __chemical_gene_regulation_graph_expansion
+        # Dynamically dispatch to __drug_treatment_graph_expansion
         getattr(self, '_' + self.__class__.__name__ + '__' + parameters['action'])() # thank you https://stackoverflow.com/questions/11649848/call-methods-by-string
 
         self.response.debug(f"Applying Infer to Message with parameters {parameters}")  # TODO: re-write this to be more specific about the actual action being performed

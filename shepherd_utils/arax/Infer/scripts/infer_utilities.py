@@ -4,14 +4,13 @@
 #   - the xDTD mapping tables are read from the directory of
 #     RTXConfig.explainable_dtd_db_path (Shepherd's ARAX data dir, DEC-6) instead of
 #     code/ARAX/KnowledgeSources/Prediction
-#   - genrete_regulate_subgraphs (legacy xCRG) is removed (dead code, E-2, DEC-5)
 #   - TRAPI 2.0: the biolink:knowledge_level / biolink:agent_type attributes are the Edge's top-level
 #     knowledge_level / agent_type (predicted treats edges: prediction / computational_model; explanation-path
 #     edges: the mapping DB's knowledge_level / agent_type, not_provided when the DB has none); a path edge
 #     without qualifiers gets none instead of an empty list; the deleted QualifierConstraint import is dropped
 # See docs/ARAX_PORT_BASELINE.md and shepherd_utils/arax/README.md.
 """
-InferUtilities: Builds TRAPI-compliant knowledge graph subgraphs from xDTD/xCRG prediction results.
+InferUtilities: Builds TRAPI-compliant knowledge graph subgraphs from xDTD prediction results.
 
 This module is the bridge between prediction databases and the ARAX TRAPI response.
 It takes prediction scores + explanation paths from ExplainableDTD and builds proper
@@ -19,10 +18,11 @@ knowledge graph nodes, edges, query graph extensions, and result objects followi
 
 Main responsibilities:
   - genrete_treat_subgraphs(): Converts xDTD drug-disease prediction results into TRAPI KG.
-  - genrete_regulate_subgraphs(): Converts xCRG chemical-gene prediction results into TRAPI KG.
   - Looks up node/edge metadata from the xDTD mapping database (Translator KG JSONL-based).
   - Handles variable-length explanation paths (1-hop, 2-hop, 3-hop).
   - Creates proper TRAPI attributes, retrieval sources, and qualifiers.
+
+Note: Chemical-gene regulation (xCRG) has been moved to ARAX_connect.py (connect(action=xcrg)).
 
 """
 
@@ -74,9 +74,8 @@ del _bmt_toolkit
 class InferUtilities:
     """Utility class for building TRAPI-compliant subgraphs from inference results.
 
-    The two main entry points are:
+    The main entry point is:
       - genrete_treat_subgraphs(): for drug-disease treatment predictions (xDTD).
-      - genrete_regulate_subgraphs(): for chemical-gene regulation predictions (xCRG).
     """
 
     def __init__(self):

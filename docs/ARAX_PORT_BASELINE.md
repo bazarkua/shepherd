@@ -432,16 +432,16 @@ The goldens need `PYTHONHASHSEED=0`, because ARAX builds several lists from sets
 
 **DEC-9 consequence:** pinned curies go to Retriever exactly as given. ARAX would first canonicalize, deduplicate and reorder them (`get_canonical_curies_list` returns `list(set(...))`). For normalized input, only the order differs, and that order is hash-seed dependent in ARAX itself.
 
-**Since ported:** `ARAX_infer` (xDTD), so inferred treats qedges run creative mode (see §2a). Inferred `affects` qedges outside MVP2 still route to the legacy xCRG infer action, which is removed (E-2), so they end in ARAXInfer's `UnknownAction` error instead of upstream's failure on the missing models.
+**Since ported:** `ARAX_infer` (xDTD), so inferred treats qedges run creative mode (see §2a). Inferred `affects` qedges outside MVP2 get no inference: Expand logs that the query is not DTD-related and answers them with the normal `fill` lookup (RTXteam/RTX#2825).
 
 **Since wired:** the `arax` worker runs it (§2a).
 
 #### 6.5 Inferred and creative branches in Expand
 
 See INF-* and CRT-*. In summary: single-qedge inferred `treats`/`ameliorates`
-goes to xDTD. Inferred `affects` with a direction goes to the legacy xCRG
-(unless MVP2). After inference a **normal lookup also runs** on the same
-qedge, with creative-treats widening.
+goes to xDTD. Other inferred qedges, including `affects` outside MVP2, get no
+inference. After inference a **normal lookup also runs** on the same qedge, with
+creative-treats widening.
 
 ### 7. NodeSynonymizer and Biolink
 
@@ -577,7 +577,7 @@ qedge, with creative-treats widening.
 | INF-05 | Prediction edge | `creative_DTD_prediction_{i}`, `biolink:treats`, `probability_treats` (`EDAM-DATA:0951`) = `str(tp_score)`, `created_datetime` **hard-coded "2026-06-28"**, `computational_model`/`prediction`, primary `infores:arax`. |
 | INF-06 | Path-edge provenance | Keeps the upstream source chain (including `source_record_urls`) and appends `infores:arax` as aggregator. |
 | INF-07 | Result ordering | Internal Resultify(ignore_edge_direction). `score = essence_scores[essence]`, keyed by **name** (names can collide). Sort descending. The ranker does not run for pure `infer` DSL. |
-| INF-08 | `infer(action=chemical_gene_regulation_graph_expansion)` (legacy xCRG) | **Dead**: its models are no longer managed, and there are several bugs (D-16). Replaced by XCR-*. |
+| INF-08 | `infer(action=chemical_gene_regulation_graph_expansion)` (legacy xCRG) | **Removed**, here (E-2) and upstream (RTXteam/RTX#2825): its models were no longer managed, and there were several bugs (D-16). Replaced by XCR-*. |
 
 ### 15. Creative "treats" in Expand
 
