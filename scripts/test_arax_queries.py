@@ -33,8 +33,7 @@ results, and evidence of the feature it exercises (an NGD attribute on the
 edges, xDTD's inferred edges, path bindings, a cache hit, the stream's kill
 token, ...). Cases that hit a recorded upstream ARAX defect (D-* in
 docs/ARAX_PORT_BASELINE.md, reproduced by the port on purpose) are expected to
-fail: XFAIL when they do, XPASS when they don't (D-23 only fires when the KP's
-answer includes support-graph edges, so it can XPASS on a small answer).
+fail: XFAIL when they do, XPASS when they don't.
 
 A local Retriever answers hops fed by more than 300 ids with a 422 unless its
 OPENAPI__X_TRAPI__BATCH_SIZE_LIMIT is raised; the run says so when it sees one.
@@ -966,7 +965,6 @@ case(
             "resultify()",
         ]
     ),
-    known_defect="D-23",
 )
 case(
     "dsl_filter_results",
@@ -1178,7 +1176,7 @@ case(
         ONE_HOP_NODES,
         ONE_HOP_EDGES,
     ),
-    known_defect="D-23",
+    known_defect="D-20",
 )
 case(
     "wf_connect_knodes",

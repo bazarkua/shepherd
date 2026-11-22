@@ -159,10 +159,10 @@ Upstream's `test_ARAX_translate.py` (translation) and `test_ARAX_workflows.py`
 cover more with `--arax-live`.
 
 **Found:** upstream defects that CQS-style workflows hit. The port reproduces
-them (DEC-1):
-- **D-23:** the `filter_kgraph_*` operations crash whenever the KP's answer
-  includes support-graph edges, because those edges are kept without
-  `qedge_keys`.
+them (DEC-1), except where marked fixed:
+- **D-23 (fixed upstream in 2add49863, ported):** the `filter_kgraph_*`
+  operations crashed whenever the KP's answer included support-graph edges,
+  because those edges were kept without `qedge_keys`.
 - **D-24:** `filter_results_top_n` with a string `max_results` fails an
   assertion.
 - **D-28 (fixed in the port):** `overlay_fisher_exact_test` (and clinical
@@ -174,9 +174,11 @@ them (DEC-1):
 - **D-30:** a large multi-hop answer with support graphs can leave edges in
   the KG whose endpoint node Expand pruned, and the next action that reads
   every edge's endpoints fails (on a three-hop lookup, the Fisher's exact test
-  in its template).
-- **D-26:** `overlay_connect_knodes` fails in Jaccard. The port's E-4 change
-  removes the disabled overlay action that made it fail sooner upstream.
+  in its template). Upstream 2add49863, ported, should fix it; not checked
+  live.
+- **D-26 (mostly fixed upstream in 2add49863, ported):**
+  `overlay_connect_knodes` failed in Jaccard; it still can when a start node
+  has no neighbor among the intermediates.
 
 ## Nice-to-haves
 

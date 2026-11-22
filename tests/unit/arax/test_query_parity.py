@@ -51,11 +51,6 @@ EXPECTED_DIFFERENCES = {
     # E-4 / E-6: the legacy `filter` command is removed; see
     # test_removed_filter_command_is_unrecognized
     "dsl_removed_filter_command": {"error_code", "message", "logs", "envelope"},
-    # E-4: overlay_connect_knodes no longer emits the disabled
-    # predict_drug_treats_disease overlay (which fails the plan upstream), so
-    # the plan runs on to the next overlay; see
-    # test_connect_knodes_translation_is_upstreams_minus_the_disabled_action
-    "wf_connect_knodes": {"error_code", "message", "logs", "envelope", "status"},
     # DEC-10: a user-specified KP list (fill's allowlist) is forwarded to
     # Retriever as parameters.kp instead of being checked against SmartAPI
     # metadata, which in upstream rejects the query
@@ -72,6 +67,14 @@ EXPECTED_DIFFERENCES = {
     # "NodeSynonymizer did not recognize" warning for an unknown id; the KP
     # request itself is identical
     "trapi_set_interpretation_all": {"logs"},
+    # TRAPI 2.0: knowledge_level and agent_type are Edge members, so
+    # remove_edges_by_discrete_attribute's warning lists them among the
+    # allowable edge attributes
+    "filter_kg_discrete_attribute_and_property": {"logs"},
+    "wf_filter_kgraph_discrete": {"logs"},
+    # D-20, as upstream: the ranker raises the same KeyError, but the traceback
+    # quotes the port's TRAPI 2.0 line (edge_binding_id, not edge_binding.id)
+    "wf_filter_kgraph_numeric": {"message", "logs"},
 }
 # TRAPI 2.0 (H5 in trapi2_goldens.py): a subclass child bound to a qnode with
 # several ids has no NodeBinding.query_id in 2.0, so ARAX records no parent
@@ -275,22 +278,6 @@ def test_fill_allowlist_is_forwarded_to_retriever(outputs):
         r for r in rec["requests"] if (r["body"].get("parameters") or {}).get("kp")
     ]
     assert forwarded["body"]["parameters"]["kp"] == ["infores:retriever"]
-
-
-def test_connect_knodes_translation_is_upstreams_minus_the_disabled_action(outputs):
-    """E-4: upstream's plan fails on predict_drug_treats_disease; the port's runs
-    the same actions without it."""
-    upstream, port = outputs
-    case = "wf_connect_knodes"
-
-    def actions(rec):
-        return rec["envelope"]["operations"]["actions"]
-
-    want = [
-        a for a in actions(upstream[case]) if "predict_drug_treats_disease" not in a
-    ]
-    assert len(want) == len(actions(upstream[case])) - 1
-    assert actions(port[case]) == want
 
 
 def test_query_graph_without_edges_is_a_one_node_query(outputs):
