@@ -151,7 +151,7 @@ API serves everything the ARAX UI calls.
 | QG interpreter and templates | QGI-* | about 1.3k LOC + YAML | Ported (TRAPI `paths` go to `arax.pathfinder`, DEC-7) | NodeNorm (category lookup) | Low to medium |
 | Expand (KP querying, multi-hop, merging) | EXP-* | about 5k LOC | Ported, Retriever only (DEC-4), parity-tested | SmartAPI, KP meta-KGs, Retriever, Gandalf, NodeNorm, FDA pickle | **High** |
 | NodeSynonymizer / Biolink | SYN-*, BL-* | about 1k LOC | Ported | NodeNorm, Name Resolver, Biolink YAML | Low |
-| Overlay | OVL-* | about 3k LOC | Ported (ICEES removed, E-8) | curie_to_pmids, tier0 overlay sqlite, COHD sqlite + cohd.io, Gandalf, eUtils | Medium |
+| Overlay | OVL-* | about 3k LOC | Ported (ICEES removed, E-8) | curie_ngd, curie_to_pmids, tier0 overlay sqlite, COHD sqlite + cohd.io, Gandalf, eUtils | Medium |
 | Filter_KG | FKG-* | about 2.4k LOC | Ported | general_concepts.json | Low to medium |
 | Filter_Results | FRS-* | about 1.3k LOC | Ported | none | Low |
 | Resultify | RES-* | about 1.75k LOC | Ported, with ARAX's own tests | none | **High** (subtle algorithm) |
@@ -472,7 +472,7 @@ qedge, with creative-treats widening.
 
 | ID | Action | Parameters (defaults) | Data / service | Output |
 |---|---|---|---|---|
-| OVL-01 | `compute_ngd` | `default_value` (`inf`; `'0'` stays a string), `virtual_relation_label`, `subject_qnode_key`, `object_qnode_key` | `curie_to_pmids_v1.0_<tier>.sqlite` (read-only, chunks of 20k). Curies canonicalized through NodeNorm. N = 3.5e7×20. | Virtual `biolink:occurs_together_in_literature_with` edge (arax primary, `statistical_association`/`automated_agent`) with `EDAM-DATA:2526` `normalized_google_distance` = `str(ngd)` and up to 30 PMIDs in `biolink:publications` (non-deterministic subset). **Decorate mode** (no label): an attribute on every KG edge (`ngd_publications`). Three modes; mode (a) keeps only the last qnode pair (D-7). |
+| OVL-01 | `compute_ngd` | `default_value` (`inf`; `'0'` stays a string), `virtual_relation_label`, `subject_qnode_key`, `object_qnode_key` | `curie_ngd_v1.0_<tier>.sqlite` first (`[neighbor, ngd, [pmids]]` entries, either direction; the port skips `[neighbor, ngd]` pairs, which have no PMIDs, and works without the file), else computed from `curie_to_pmids_v1.0_<tier>.sqlite` (int32 blob or JSON PMID list; read-only, chunks of 20k). Curies canonicalized through NodeNorm. N = 3.5e7×20. | Virtual `biolink:occurs_together_in_literature_with` edge (arax primary, `statistical_association`/`automated_agent`) with `EDAM-DATA:2526` `normalized_google_distance` = `str(ngd)` and PMIDs in `biolink:publications`: when computed, a non-deterministic subset capped at 30; when stored, used as they are with no cap (936,906 entries sampled from the tier0-20260928 file have at most 30). **Decorate mode** (no label): an attribute on every KG edge (`ngd_publications`). Three modes; mode (a) keeps only the last qnode pair (D-7). |
 | OVL-02 | `overlay_clinical_info` (COHD) | `COHD_method` ∈ {`paired_concept_frequency` (default), `observed_expected_ratio`, `chi_square`} or the equivalent boolean flags; label/subject/object | curie→OMOP via **cohd.io API** (`biolink_to_omop`); statistics from `COHDdatabase_v1.0_KG2.8.0.db` (dataset 3). Eligible categories: SmallMolecule, PhenotypicFeature, Disease, Drug. | Virtual `biolink:associated_with` edge (cohd primary, arax aggregator) with `EDAM-DATA:0951` = `str(value)`. max freq / max ln_ratio / p-value of the largest χ² (D-8). Decorate mode also exists. |
 | OVL-03 | `compute_jaccard` | `start_node_key`, `intermediate_node_key`, `end_node_key`, `virtual_relation_label` (all required) | KG only | `biolink:has_jaccard_index_with` start→end, including value 0. Value is a float, `EDAM-DATA:1772`. **Not bound to results.** The value is `\|I(E)∩I(S)\|/\|I(S)\|` (asymmetric). |
 | OVL-04 | `add_node_pmids` | `max_num` (100 or `all`) | curie_to_pmids sqlite (lookup-key bug, D-9), with NCBI eUtils fallback | Node attribute `EDAM-DATA:0971` `pubmed_ids` |
@@ -633,7 +633,7 @@ qedge, with creative-treats widening.
 
 | File (tier `tier0-20260621` unless noted) | Used by | In Shepherd |
 |---|---|---|
-| `curie_ngd_v1.0_<tier>.sqlite` | CON-*, XCR-* | Yes (the pathfinder download, shared with the `arax` worker) |
+| `curie_ngd_v1.0_<tier>.sqlite` | OVL-01, CON-*, XCR-* | Yes (the pathfinder download, shared with the `arax` worker) |
 | `tier0-info-for-overlay_v1.0_<tier>.sqlite` (= `kg2c_sqlite`) | CON-*, OVL-05 (FET) | Yes (the pathfinder download, shared with the `arax` worker) |
 | `curie_to_pmids_v1.0_<tier>.sqlite` | OVL-01, OVL-04, XCR-* | Download set up (`arax` worker); placeholder URL (DEC-6) |
 | `ExplainableDTD_v1.0_<tier>-all_with_paths.db` | INF-* | Download set up (`arax` worker); placeholder URL (DEC-6) |
@@ -726,7 +726,7 @@ are cached and aiohttp HTTP errors propagate, as upstream, but TLS is verified.
 | D-16 | Legacy xCRG infer: the `kp` check always fails, `int.is_float`, wrong variable, `describe` KeyError, missing models. | `ARAX_infer.py:588-876` |
 | D-17 | Category-specific QGI templates can never match (the list vs string comparison), so the drug-treats-disease templates are unreachable. | `query_graph_info.py:348` |
 | D-18 | `envelope.description` is stale; `/asyncquery` returns no `job_id`; `/asyncquery_status` logs are always empty. | `ARAX_query.py:893,957`, tracker |
-| D-19 | Non-determinism: Resultify's start qnode is `list(set)[0]`; the NGD PMID subset uses `islice` on a set. | `ARAX_resultify.py`, `compute_ngd.py` |
+| D-19 | Non-determinism: Resultify's start qnode is `list(set)[0]`; a computed NGD's PMID subset uses `islice` on a set. | `ARAX_resultify.py`, `compute_ngd.py` |
 | D-20 | Ranker `UnboundLocalError` with publications n=0; `KeyError`s on dangling bindings. | `ARAX_ranker.py:431` |
 | D-21 | `query_return_stream` checks whether its query thread is already done *before* its loop, so a query that finishes first (an input error, say) streams **nothing**, not even the envelope. The Shepherd worker then saves the finished response's envelope, so the stream still ends with it. | `ARAX_query.py:98` |
 | D-22 | `/response/{id}` returns the response with its `message` emptied whenever reasoner-validator raises (for example, when it cannot fetch the TRAPI schema from standards.ncats.io): the validator pops `message`, validates against a `{}` stub and only restores it at the end. The UI then shows an empty response. Fix: validate a copy. | `response_cache.py` `get_response` (validation block); reasoner-validator 6.0.2 `check_compliance_of_trapi_response` |

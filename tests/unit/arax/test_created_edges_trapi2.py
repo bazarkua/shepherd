@@ -190,7 +190,10 @@ def test_jaccard_virtual_edges():
 @pytest.fixture
 def ngd(monkeypatch):
     cls = compute_ngd.ComputeNGD
-    monkeypatch.setattr(cls, "_setup_ngd_database", lambda self: (None, None))
+    monkeypatch.setattr(
+        cls, "_setup_curie_to_pmids_database", lambda self: (None, None)
+    )
+    monkeypatch.setattr(cls, "_setup_curie_ngd_database", lambda self: (None, None))
     monkeypatch.setattr(cls, "_close_database", lambda self: None, raising=False)
     monkeypatch.setattr(
         cls, "_get_canonical_curies_map", lambda self, curies: {c: c for c in curies}
