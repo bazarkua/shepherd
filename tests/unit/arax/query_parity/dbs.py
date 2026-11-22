@@ -195,27 +195,16 @@ def write_xdtd(path, seed=17):
         "CREATE TABLE PATH_RESULT_TABLE (drug_id VARCHAR(255), drug_name VARCHAR(255), disease_id VARCHAR(255), disease_name VARCHAR(255), path VARCHAR(255), path_score FLOAT)"
     )
     con.execute(
-        "CREATE TABLE NODE_MAPPING_TABLE (id TEXT NOT NULL, name TEXT, category TEXT, equivalent_identifiers TEXT, description TEXT, synonym TEXT, xref TEXT, chembl_natural_product TEXT, chembl_availability_type TEXT, chembl_black_box_warning TEXT)"
+        "CREATE TABLE NODE_MAPPING_TABLE (id TEXT NOT NULL, name TEXT, category TEXT, extra_attributes TEXT)"
     )
     con.execute(
-        "CREATE TABLE EDGE_MAPPING_TABLE (subject TEXT NOT NULL, predicate TEXT NOT NULL, object TEXT NOT NULL, id TEXT, category TEXT, qualifier TEXT, publications TEXT, sources TEXT, resource_id TEXT, resource_role TEXT, knowledge_level TEXT, agent_type TEXT, stage_qualifier TEXT, original_subject TEXT, original_object TEXT, extra_attributes TEXT)"
+        "CREATE TABLE EDGE_MAPPING_TABLE (subject TEXT NOT NULL, predicate TEXT NOT NULL, object TEXT NOT NULL, id TEXT, category TEXT, extra_attributes TEXT)"
     )
     for nid in sorted(NODES):
         n = NODES[nid]
         con.execute(
-            "INSERT INTO NODE_MAPPING_TABLE VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (
-                nid,
-                n["name"],
-                json.dumps(n["categories"]),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            ),
+            "INSERT INTO NODE_MAPPING_TABLE VALUES (?,?,?,?)",
+            (nid, n["name"], json.dumps(n["categories"]), None),
         )
     seen_edges = set()
     for disease in XDTD_DISEASES:
@@ -268,29 +257,27 @@ def write_xdtd(path, seed=17):
                     for s in e["sources"]
                 ]
                 pubs = [f"PMID:{r.randint(1, 999)}" for _ in range(r.randint(0, 3))]
+                # every key but the core columns, as the real file stores them
+                extra = {
+                    "sources": sources,
+                    "knowledge_level": "knowledge_assertion",
+                    "agent_type": "manual_agent",
+                    "original_subject": e["subject"],
+                    "original_object": e["object"],
+                }
+                if pubs:
+                    extra["publications"] = pubs
+                if len(seen_edges) % 3 == 0:
+                    extra["object_aspect_qualifier"] = "activity"
                 con.execute(
-                    "INSERT INTO EDGE_MAPPING_TABLE VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO EDGE_MAPPING_TABLE VALUES (?,?,?,?,?,?)",
                     (
                         e["subject"],
                         e["predicate"],
                         e["object"],
                         f"xdtd_edge_{len(seen_edges)}",
                         json.dumps(["biolink:Association"]),
-                        None,
-                        json.dumps(pubs) if pubs else None,
-                        json.dumps(sources),
-                        "|".join(s["resource_id"] for s in sources),
-                        "|".join(s["resource_role"] for s in sources),
-                        "knowledge_assertion",
-                        "manual_agent",
-                        None,
-                        None,
-                        None,
-                        (
-                            json.dumps({"object_aspect_qualifier": "activity"})
-                            if len(seen_edges) % 3 == 0
-                            else None
-                        ),
+                        json.dumps(extra),
                     ),
                 )
     con.commit()

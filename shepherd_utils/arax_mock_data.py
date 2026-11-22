@@ -721,50 +721,46 @@ def write_explainable_dtd(path: str, graph: MockGraph) -> None:
         "CREATE TABLE PATH_RESULT_TABLE (drug_id VARCHAR(255), drug_name VARCHAR(255), disease_id VARCHAR(255), disease_name VARCHAR(255), path VARCHAR(255), path_score FLOAT)"
     )
     con.execute(
-        "CREATE TABLE NODE_MAPPING_TABLE (id TEXT NOT NULL, name TEXT, category TEXT, equivalent_identifiers TEXT, description TEXT, synonym TEXT, xref TEXT, chembl_natural_product TEXT, chembl_availability_type TEXT, chembl_black_box_warning TEXT)"
+        "CREATE TABLE NODE_MAPPING_TABLE (id TEXT NOT NULL, name TEXT, category TEXT, extra_attributes TEXT)"
     )
     con.execute(
-        "CREATE TABLE EDGE_MAPPING_TABLE (subject TEXT NOT NULL, predicate TEXT NOT NULL, object TEXT NOT NULL, id TEXT, category TEXT, qualifier TEXT, publications TEXT, sources TEXT, resource_id TEXT, resource_role TEXT, knowledge_level TEXT, agent_type TEXT, stage_qualifier TEXT, original_subject TEXT, original_object TEXT, extra_attributes TEXT)"
+        "CREATE TABLE EDGE_MAPPING_TABLE (subject TEXT NOT NULL, predicate TEXT NOT NULL, object TEXT NOT NULL, id TEXT, category TEXT, extra_attributes TEXT)"
     )
     for curie in sorted(graph.nodes):
         node = graph.nodes[curie]
         con.execute(
-            "INSERT INTO NODE_MAPPING_TABLE VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO NODE_MAPPING_TABLE VALUES (?,?,?,?)",
             (
                 curie,
                 node["name"],
                 json.dumps(node["categories"][:1] or ["biolink:NamedThing"]),
-                json.dumps([curie]),
-                f"Mock description of {node['name']}",
-                json.dumps([node["name"]]),
-                None,
-                None,
-                None,
-                None,
+                json.dumps(
+                    {
+                        "equivalent_identifiers": [curie],
+                        "description": f"Mock description of {node['name']}",
+                        "synonym": [node["name"]],
+                    }
+                ),
             ),
         )
     for key in sorted(graph.edges):
         edge = graph.edges[key]
-        sources = edge["sources"]
+        extra = {
+            "sources": edge["sources"],
+            "knowledge_level": "knowledge_assertion",
+            "agent_type": "manual_agent",
+        }
+        if edge["publications"]:
+            extra["publications"] = edge["publications"]
         con.execute(
-            "INSERT INTO EDGE_MAPPING_TABLE VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO EDGE_MAPPING_TABLE VALUES (?,?,?,?,?,?)",
             (
                 edge["subject"],
                 edge["predicate"],
                 edge["object"],
                 key,
                 json.dumps(["biolink:Association"]),
-                None,
-                json.dumps(edge["publications"]) if edge["publications"] else None,
-                json.dumps(sources),
-                "|".join(s.get("resource_id", "") for s in sources),
-                "|".join(s.get("resource_role", "") for s in sources),
-                "knowledge_assertion",
-                "manual_agent",
-                None,
-                None,
-                None,
-                None,
+                json.dumps(extra),
             ),
         )
     drugs = sorted(c for c in graph.nodes if graph.is_drug(c))
