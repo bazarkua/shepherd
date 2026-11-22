@@ -648,9 +648,12 @@ async def arax_background_tasks() -> None:
         log.error(f"Could not fetch the ARAX autocomplete database: {e}")
     while True:
         try:
-            await asyncio.to_thread(_refresh_meta_kg)
+            if not await asyncio.to_thread(_refresh_meta_kg):
+                # refresh_meta_kg printed why: Retriever gave no meta-KG and there
+                # is no backup, or it hit an error of its own
+                log.error("ARAX meta-KG refresh failed")
         except Exception as e:
-            log.error(f"ARAX meta-KG refresh failed: {e}")
+            log.error(f"ARAX meta-KG refresh failed: {e}", exc_info=True)
         await asyncio.sleep(META_KG_REFRESH_SEC)
 
 

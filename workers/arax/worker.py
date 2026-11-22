@@ -826,7 +826,9 @@ def refresh_kp_cache_once(logger: logging.Logger) -> bool:
     try:
         KPQueryCacher().refresh_cache()
     except Exception as e:
-        logger.warning(f"KP cache refresh failed: {type(e).__name__}: {e}")
+        logger.error(
+            f"KP cache refresh failed: {type(e).__name__}: {e}", exc_info=True
+        )
     finally:
         if db.get(KP_CACHE_REFRESH_LOCK_KEY) == token.encode():
             db.delete(KP_CACHE_REFRESH_LOCK_KEY)
@@ -844,7 +846,9 @@ async def kp_cache_refresh_loop(loop, logger: logging.Logger) -> None:
         try:
             await loop.run_in_executor(None, refresh_kp_cache_once, logger)
         except Exception as e:
-            logger.warning(f"KP cache refresh failed: {type(e).__name__}: {e}")
+            logger.error(
+                f"KP cache refresh failed: {type(e).__name__}: {e}", exc_info=True
+            )
         await asyncio.sleep(max(1.0, interval - (time.monotonic() - started)))
 
 
