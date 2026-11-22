@@ -1,6 +1,9 @@
 """Record goldens_trapi16.json.gz by running the cases through upstream ARAXQuery.
 
 Usage: PYTHONHASHSEED=0 RTX_CODE=/path/to/RTX/code python run_upstream.py
+Record on Linux with the files on the container's own filesystem: on macOS
+files some cases come out with categories in another order. The checkout's
+config_dbs.json must name this port's tier files (tier0-20260928).
 Needs the same RTX checkout and offline config as expand_parity/run_upstream.py.
 ARAX's query tracker and response store (MySQL/S3) are replaced by stubs, as
 is the legacy creativeCRG module (dead code, not exercised by any case), and

@@ -1,6 +1,9 @@
 """Record goldens_trapi16.json.gz by running the cases against upstream ARAX.
 
 Usage: PYTHONHASHSEED=0 RTX_CODE=/path/to/RTX/code python run_upstream.py
+Record on Linux with the files on the container's own filesystem: on macOS
+files some cases come out with categories in another order. The checkout's
+config_dbs.json must name this port's tier files (tier0-20260928).
 Needs an RTX checkout at the commit pinned in shepherd_utils/arax/README.md,
 ARAX's Python requirements, a dummy code/config_secrets_local.json and
 code/maturity_override.txt ("development") so RTXConfiguration starts offline.
@@ -34,7 +37,7 @@ F.write_tier0_sqlite(
         "ARAX",
         "KnowledgeSources",
         "KG2c",
-        "tier0-info-for-overlay_v1.0_tier0-20260621.sqlite",
+        "tier0-info-for-overlay_v1.0_tier0-20260928.sqlite",
     )
 )
 F.write_fda_pickle(

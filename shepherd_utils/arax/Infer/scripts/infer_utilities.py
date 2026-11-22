@@ -429,7 +429,7 @@ class InferUtilities:
                     # Add the edge to the knowledge graph
                     treat_score = node_id_to_score[canonical_id]
                     edge_attribute_list = [
-                        Attribute(original_attribute_name="created_datetime", value="2026-06-28", attribute_type_id="metatype:Datetime"),
+                        Attribute(original_attribute_name="created_datetime", value="2026-09-28", attribute_type_id="metatype:Datetime"),
                         Attribute(attribute_type_id="EDAM-DATA:0951", original_attribute_name="probability_treats", value=str(treat_score)),
                     ]
                     retrieval_source = [
@@ -584,7 +584,7 @@ class InferUtilities:
                                         knowledge_level=extras.get('knowledge_level') or "not_provided",
                                         agent_type=extras.get('agent_type') or "not_provided")
                         edge_attribute_list = [
-                            Attribute(original_attribute_name="created_datetime", value="2026-06-28", attribute_type_id="metatype:Datetime"),
+                            Attribute(original_attribute_name="created_datetime", value="2026-09-28", attribute_type_id="metatype:Datetime"),
                         ]
                         edge_qualifier_list = []
                         if edge_info.category:
@@ -636,7 +636,7 @@ class InferUtilities:
                     essence_scores[path_drug_node_info.name] = treat_score
                 
                 edge_attribute_list = [
-                    Attribute(original_attribute_name="created_datetime", value="2026-06-28", attribute_type_id="metatype:Datetime"),
+                    Attribute(original_attribute_name="created_datetime", value="2026-09-28", attribute_type_id="metatype:Datetime"),
                     Attribute(attribute_type_id="EDAM-DATA:0951", original_attribute_name="probability_treats", value=str(treat_score)),
                 ]
                 retrieval_source = [

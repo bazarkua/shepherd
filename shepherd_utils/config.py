@@ -261,7 +261,7 @@ class Settings(BaseSettings):
     )
 
     arax_pathfinder_dbs_dir: str = "arax_pathfinder_dbs"
-    arax_pathfinder_tier_version: str = "tier0-20260621"
+    arax_pathfinder_tier_version: str = "tier0-20260928"
     arax_pathfinder_curie_ngd_sqlite_filename: str = "curie_ngd_v1.0_{version}.sqlite"
     arax_pathfinder_tier0_overlay_sqlite_filename: str = (
         "tier0-info-for-overlay_v1.0_{version}.sqlite"
@@ -276,15 +276,14 @@ class Settings(BaseSettings):
     # here -- use arax_pathfinder_sqlite_paths() for those.
     # {version} in a filename template is filled from arax_tier_version.
     # Each *_url, when set, replaces the default {arax_dbs_base_url}/{filename}
-    # for that one file (the defaults are placeholders until the real files are
-    # published).
+    # for that one file. A tier's files must be hosted there before it is deployed.
     arax_dbs_dir: str = "arax_dbs"
-    arax_tier_version: str = "tier0-20260621"
+    arax_tier_version: str = "tier0-20260928"
     arax_dbs_base_url: str = "https://kg2webhost.rtx.ai/tier0"
     arax_curie_to_pmids_sqlite_filename: str = "curie_to_pmids_v1.0_{version}.sqlite"
     arax_curie_to_pmids_url: str = ""
     arax_explainable_dtd_db_filename: str = (
-        "ExplainableDTD_v1.0_{version}-all_with_paths.db"
+        "ExplainableDTD_v1.0-{version}-all_with_paths.db"
     )
     arax_explainable_dtd_url: str = ""
     arax_autocomplete_sqlite_filename: str = "autocomplete_v1.0_{version}.sqlite"

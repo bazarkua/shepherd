@@ -114,7 +114,7 @@ commit to git (they're gitignored and volume-mounted from the host):
 - **`aragorn_omnicorp`** → `./omnicorp_lmdb/` (`curies.lmdb`, `shared_counts.lmdb`)
 - **`score_paths`** → `./pathfinder_embeddings/` (a directory-style LMDB)
 - **`arax_pathfinder`** → `./arax_pathfinder_dbs/` (`curie_ngd_v1.0_<tier-version>.sqlite`, `tier0-info-for-overlay_v1.0_<tier-version>.sqlite`, `general_concepts.json`)
-- **arax** (the in-process ARAX port) → `./arax_dbs/` (`curie_to_pmids_v1.0_<tier-version>.sqlite`, `ExplainableDTD_v1.0_<tier-version>-all_with_paths.db`, `fda_approved_drugs_v1.0.pickle`, `COHDdatabase_v1.0_KG2.8.0.db`), plus the arax_pathfinder sqlite dbs in `./arax_pathfinder_dbs/`. The server's ARAX API fetches `autocomplete_v1.0_<tier-version>.sqlite` into the same `./arax_dbs/` (and keeps its meta-KG backups there). The arax worker also caches the Biolink model and ARAX's Biolink lookup map in `./arax_dbs/biolink/`, built at startup so it survives restarts (`ARAX_BIOLINK_CACHE_DIR` moves it).
+- **arax** (the in-process ARAX port) → `./arax_dbs/` (`curie_to_pmids_v1.0_<tier-version>.sqlite`, `ExplainableDTD_v1.0-<tier-version>-all_with_paths.db`, `fda_approved_drugs_v1.0.pickle`, `COHDdatabase_v1.0_KG2.8.0.db`), plus the arax_pathfinder sqlite dbs in `./arax_pathfinder_dbs/`. The server's ARAX API fetches `autocomplete_v1.0_<tier-version>.sqlite` into the same `./arax_dbs/` (and keeps its meta-KG backups there). The arax worker also caches the Biolink model and ARAX's Biolink lookup map in `./arax_dbs/biolink/`, built at startup so it survives restarts (`ARAX_BIOLINK_CACHE_DIR` moves it).
 
 So a new developer doesn't have to source these by hand, each worker can fetch its dataset on first
 startup. Two download mechanisms are supported, depending on where the dataset lives:
@@ -135,7 +135,7 @@ filenames embed a Knowledge Graph version that changes periodically, so only one
 when a new Knowledge Graph ships:
 
 ```dotenv
-ARAX_PATHFINDER_TIER_VERSION=tier0-20260621
+ARAX_PATHFINDER_TIER_VERSION=tier0-20260928
 ```
 
 The ARAX blocked-concept list (`general_concepts.json`, fetched from GitHub) lands in this same
@@ -150,11 +150,15 @@ and `arax_db_path(name)` is the single place their on-disk paths come from. The 
 filenames are filled from one variable, separate from pathfinder's:
 
 ```dotenv
-ARAX_TIER_VERSION=tier0-20260621
+ARAX_TIER_VERSION=tier0-20260928
 ```
 
-By default each file is fetched from `ARAX_DBS_BASE_URL/<filename>`. These URLs are placeholders until
-the real files are published; a single file can be pointed elsewhere with its own override
+By default each file is fetched from `ARAX_DBS_BASE_URL/<filename>` (`kg2webhost.rtx.ai/tier0`), so host a
+tier's files there before deploying it. The ExplainableDTD filename has a hyphen after `v1.0`, and the file needs
+Infer's new mapping schema, so an older ExplainableDTD file does not work with this code. Its directory must be
+writable: the file is in WAL mode, so SQLite creates `-shm` and `-wal` files next to it. The FDA pickle's name has
+no tier, so a volume that already has one keeps it: delete it to pick up the new one. A single file can be pointed
+elsewhere with its own override
 (`ARAX_CURIE_TO_PMIDS_URL`, `ARAX_EXPLAINABLE_DTD_URL`, `ARAX_AUTOCOMPLETE_URL`,
 `ARAX_FDA_APPROVED_DRUGS_URL`, `ARAX_COHD_URL`), and each filename can be changed with its
 `ARAX_*_FILENAME` setting. COHD stays on its KG2.8.0 build and the FDA pickle has no tier version, so
