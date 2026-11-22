@@ -7,6 +7,35 @@ issues and a future parity register (like `ARS_PARITY_REGISTER.md`).
 
 - **Upstream:** [RTXteam/RTX](https://github.com/RTXteam/RTX), `master` at
   `9485431` (2026-09-21).
+- **Synced with master `9c3f4c86d` (2026-11-09).** The upstream changes after
+  the pin that touch code the port has are ported, each in its own commit
+  naming its upstream commits, except:
+  - RTXteam/RTX#2922 (`f7812633a`, `a538145e6`, Infer stops normalizing ids):
+    on hold. The port sends ids as given (DEC-9), so Infer's normalization is
+    its only id conversion.
+  - `615baff37` (single-node Expand removed, its template now an error): not ported,
+    single-node queries still go to Retriever (DEC-4). Its Fisher's exact test
+    change was already in the port.
+  - RTXteam/RTX#2923 and Pathfinder's OTel commits (`fa4cf4d87`, `40168b2aa`,
+    `f43aa3a3b`), inline OTel spans: the port adds its spans from outside
+    (`shepherd_utils/arax_tracing.py`).
+  - RTXteam/RTX#2908's tasker restart with backoff, `eb2d78d66`'s
+    `SafePickleType` and `e02ec2287`: the port has no forked background tasker (its refresh loops are asyncio), MySQL
+    tracker or KPInfoCacher (OPS-07).
+  - Cleanup with no behaviour change: the rest of `db6140e7a` and `090d73b71`
+    (renames, KG2 text, dead helpers), `6eb740c88`, `24e3a9ac6`, `ac4320ff5`,
+    `9818686cd` (docstrings).
+  - Upstream's new `test_trapi_query_cacher.py` (SQLAlchemy); the port's store
+    is Redis.
+
+  - `5c1aba4be` (a TRAPI 1.6 dev Retriever entry in `Expand/smartapi.py`):
+    not ported, the port speaks TRAPI 2.0.
+
+  Already in the port before this sync: `2fb4c0dbd` (xCRG pin, DEC-21) and
+  `9bbdf875e` (dead templates, E-3). Upstream's test-only changes (e.g.
+  `d6d468833`) come in with the vendored suite, synced with master. Commits
+  that touch only code the port doesn't have (the UI, KG2 build and database
+  scripts, deploy files) are not listed. File headers still name the pin.
 - **Shepherd:** inventoried at `main` `e3bc720`; the Shepherd columns reflect the port
   on branch `claude/optimistic-gauss-bjtrzh`.
 - **Method:** static reading of the code. Nothing was executed against a live

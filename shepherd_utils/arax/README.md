@@ -1,8 +1,9 @@
 # ARAX port library
 
 A module-for-module port of the ARAX reasoner (`RTXteam/RTX`, pinned to commit
-`9485431`), run in-process by Shepherd's ARAX worker (DEC-14 in
-`docs/ARAX_PORT_BASELINE.md`).
+`9485431` and synced with `master` at `9c3f4c86d`), run in-process by
+Shepherd's ARAX worker (DEC-14 in `docs/ARAX_PORT_BASELINE.md`, whose
+"Synced with master" note lists what was not ported).
 
 Rules for this directory:
 
