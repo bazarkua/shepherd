@@ -24,9 +24,9 @@ shows exactly what changed. Code that was already broken upstream (the TRAPI
 
 ## In CI (offline)
 
-`pytest tests/unit/arax/upstream_suite` runs the 89 tests in
+`pytest tests/unit/arax/upstream_suite` runs the 95 tests in
 `offline_passing.txt`. These are every upstream test that passes on upstream
-ARAX itself with no network and no ARAX data files (and all 89 pass on the
+ARAX itself with no network and no ARAX data files (and all 95 pass on the
 port, adapted as described here). The rest are skipped because they fail
 offline on upstream too. The two xfails are the port's recorded difference
 DEC-4 (xCRG uses Shepherd's Retriever).

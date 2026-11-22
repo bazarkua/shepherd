@@ -505,7 +505,7 @@ qedge, with creative-treats widening.
 | FKG-08 | `remove_nodes_by_category` | `node_category` | Nodes and incident edges. |
 | FKG-09 | `remove_nodes_by_property` | `node_property`, `property_value` | Equality or list membership. |
 | FKG-10 | `remove_orphaned_nodes` | `node_category` (has no effect, D-13) | Removes nodes with no incident edge, but keeps nodes bound to QG-orphan qnodes. |
-| FKG-11 | `remove_general_concept_nodes` | `perform_action` (true) | Block list `general_concepts.json` (4193 curies, 360 synonyms, 1 regex) matched against name/xref/synonym/equivalent_identifiers, lowercased. It is a **single pass over edges** (edges seen before a node is flagged survive), then `remove_orphaned_nodes`. |
+| FKG-11 | `remove_general_concept_nodes` | `perform_action` (true) | Block list `general_concepts.json` (4193 curies, 360 synonyms, 1 regex) matched against the name and the xref, equivalent_identifiers, same_as and synonym attributes, lowercased. An attribute counts by its name, whether typed (`biolink:equivalent_identifiers`) or generic (`biolink:Attribute` with `original_attribute_name`). A node with no attributes is never flagged, whatever its name. It is a **single pass over edges**, checking each edge's two nodes and removing the edge if either is blocklisted, then `remove_orphaned_nodes`. |
 
 ### 10. Filter_Results (`AQ/ARAX_filter_results.py`, `AQ/Filter_Results/sort_results.py`)
 
