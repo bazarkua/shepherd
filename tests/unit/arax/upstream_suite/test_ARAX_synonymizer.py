@@ -13,6 +13,7 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../NodeSynonymizer/")
 from node_synonymizer import NodeSynonymizer
+from shepherd_utils.config import settings
 
 # ==============================================================================================================
 # TEST DATA EVIDENCE & TRUTH REFERENCE
@@ -447,6 +448,38 @@ def test_truncate_cluster():
     assert results[PARKINSONS_CURIE]["total_synonyms"] > 2
     assert results[PARKINSONS_CURIE]["categories"]["biolink:Disease"] > 2
     assert "biolink:Drug" not in results[PARKINSONS_CURIE]["categories"]
+
+
+# Upstream's tests fake the bare RTXConfiguration module; the port's maturity comes
+# from Shepherd's settings, so these set that and run the real RTXConfiguration. The
+# bare name exists only through this suite's upstream_alias: blocking it fails a bare
+# import here, which in production would silently give the fallback URL.
+# each maturity must use its own tier's NodeNorm, so PROD never calls CI (#2913)
+@pytest.mark.parametrize("maturity, expected_url", [
+    ("development", "https://nodenorm-es.ci.transltr.io"),
+    ("staging", "https://nodenorm-es.ci.transltr.io"),
+    ("testing", "https://nodenorm-es.test.transltr.io"),
+    ("production", "https://nodenorm-es.transltr.io"),
+])
+def test_node_normalizer_url_by_maturity(monkeypatch, maturity, expected_url):
+    monkeypatch.setitem(sys.modules, "RTXConfiguration", None)
+    monkeypatch.setattr(settings, "server_maturity", maturity)
+    monkeypatch.setattr(NodeSynonymizer, "_resolved_node_normalizer_url", None)
+    assert NodeSynonymizer.resolve_node_normalizer_url() == expected_url
+
+
+# each maturity must use its own tier's Name Resolver (#2913)
+@pytest.mark.parametrize("maturity, expected_url", [
+    ("development", "https://name-lookup.ci.transltr.io"),
+    ("staging", "https://name-lookup.ci.transltr.io"),
+    ("testing", "https://name-lookup.test.transltr.io"),
+    ("production", "https://name-lookup.transltr.io"),
+])
+def test_name_resolver_url_by_maturity(monkeypatch, maturity, expected_url):
+    monkeypatch.setitem(sys.modules, "RTXConfiguration", None)
+    monkeypatch.setattr(settings, "server_maturity", maturity)
+    monkeypatch.setattr(NodeSynonymizer, "_resolved_name_resolver_url", None)
+    assert NodeSynonymizer.resolve_name_resolver_url() == expected_url
 
 
 if __name__ == "__main__":

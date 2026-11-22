@@ -9,7 +9,8 @@ the port.
 
 **They are no longer verbatim.** Upstream ARAX speaks TRAPI 1.6 and the port
 speaks TRAPI 2.0, so where a test builds or checks a TRAPI 1.x shape it is
-adapted to the 2.0 one, and nothing else: one `NodeBinding(ids=[...])` /
+adapted to the 2.0 one, and nothing else (the two RTXteam/RTX#2913 tests described
+under "In CI" are the one exception): one `NodeBinding(ids=[...])` /
 `EdgeBinding(ids=[...])` per qnode / qedge instead of lists of `id` bindings;
 a QEdge's `constraints` object instead of `attribute_constraints` /
 `qualifier_constraints` (a qualifier set is a `{type: value}` dict);
@@ -23,12 +24,17 @@ shows exactly what changed. Code that was already broken upstream (the TRAPI
 
 ## In CI (offline)
 
-`pytest tests/unit/arax/upstream_suite` runs the 81 tests in
+`pytest tests/unit/arax/upstream_suite` runs the 89 tests in
 `offline_passing.txt`. These are every upstream test that passes on upstream
-ARAX itself with no network and no ARAX data files (and all 81 pass on the
-port, adapted to TRAPI 2.0 as above). The rest are skipped because they fail
+ARAX itself with no network and no ARAX data files (and all 89 pass on the
+port, adapted as described here). The rest are skipped because they fail
 offline on upstream too. The two xfails are the port's recorded difference
 DEC-4 (xCRG uses Shepherd's Retriever).
+
+`test_node_normalizer_url_by_maturity` and `test_name_resolver_url_by_maturity`
+come from RTXteam/RTX#2913, after the pin above. Upstream's versions fake the
+bare `RTXConfiguration` module, which the port doesn't import, so these set
+`settings.server_maturity` and run the port's real `RTXConfiguration`.
 
 ## Against live services (`--arax-live`)
 
