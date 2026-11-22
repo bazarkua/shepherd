@@ -490,7 +490,14 @@ class KPQueryCacher:
             n_successful_refreshes=0,
             n_failed_refreshes=0,
             n_refresh_same_results=0,
-            n_refresh_different_results=0
+            n_refresh_different_results=0,
+            # This is now a new first response, and lookups prefer last_refresh_http_code over first_query_http_code
+            last_attempted_refresh_datetime=None,
+            last_successful_refresh_datetime=None,
+            last_refresh_elapsed=None,
+            last_attempted_refresh_http_code=None,
+            last_refresh_http_code=None,
+            last_refresh_n_results=None
         )
 
         try:
