@@ -9,7 +9,8 @@
 #   - entries expire settings.arax_kp_cache_ttl_sec after their last request (the TTL is
 #     renewed on each hit, not by a refresh), since the store outlives any one process;
 #     upstream's cache lives until the next BackgroundTasker start clears it. The
-#     BackgroundTasker-mode clear at startup is dropped for the same reason
+#     BackgroundTasker-mode clear at startup is dropped for the same reason. A non-http
+#     entry is still a miss 6 h after its last store, as upstream, whatever its TTL
 #   - settings.arax_kp_cache_enabled = False makes every lookup miss and every store a
 #     no-op (as the parity tests stub upstream's cacher)
 #   - async_post_query_to_web_service verifies TLS (D-5 does not apply) and, like
@@ -17,7 +18,8 @@
 #   - delete_input_query and purge_cache also delete the stored response (upstream leaves
 #     the file, after which store_response for that query gives up)
 #   - a data-store error in a lookup is a miss, and in a store skips it (upstream's
-#     SQLite is local; a transient Redis error should not fail the KP query)
+#     SQLite is local; a transient Redis error should not fail the KP query); so is a
+#     bad timestamp in a non-http entry's age check
 #   - total_cache_size_MiB is the stored (compressed) response size
 #   - main(): the --query_number test query (hard-wired KP URLs) is dropped
 #   - TRAPI 2.0: the key is still the sha256 of {url, body}, so 2.0 request bodies (constraints
@@ -351,6 +353,15 @@ class KPQueryCacher:
 
         # Now try to read the file
         try:
+            # refresh_cache() only refreshes http entries, so expire the others (xCRG, PathFinder) by age instead.
+            # The age runs from the last store: a hit renews the TTL below but keeps first_request_datetime
+            if not record['query_url'].startswith('http'):
+                cached_at = datetime.strptime(record['first_request_datetime'], '%Y-%m-%d %H:%M:%S')
+                age_hours = (datetime.now() - cached_at).total_seconds() / 3600
+                if age_hours > AGE_BEFORE_REFRESH_HOURS:
+                    eprint(f"Cached {record['kp_curie']} entry is {age_hours:.1f} hours old; treating as a cache miss")
+                    return None, NO_CACHED_RESPONSE, time.time() - start_time, None
+
             # Found a record, update stats (and keep it for another TTL)
             record['n_requests'] += 1
             record['last_request_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

@@ -70,9 +70,9 @@ Shepherd's storage (DEC-3):
   kept in Shepherd's data store for 7 days.
 
 The KP response cache is ported too (DEC-18). It holds every KP response
-Expand gets and Connect's results, stored in Shepherd's Redis and shared by
-every worker. `bypass_cache` works, the background refresh runs, and the UI's
-KP cache view lists it.
+Expand gets and Connect's successful, non-empty results, stored in Shepherd's
+Redis and shared by every worker. `bypass_cache` works, the background refresh
+runs, and the UI's KP cache view lists it.
 
 **Tests.**
 - `test_response_parity.py` runs 28 lookups against upstream: local, URL, ARS
