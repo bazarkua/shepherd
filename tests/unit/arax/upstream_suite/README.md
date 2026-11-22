@@ -1,7 +1,8 @@
 # Upstream ARAX's test suite, run against the port
 
 The `test_*.py` files here are upstream ARAX's own tests
-(`RTXteam/RTX @ 9485431`, `code/ARAX/test/`, MIT, see `LICENSE.RTX`).
+(`RTXteam/RTX` `code/ARAX/test/`, synced with master @ 9c3f4c86d; MIT, see
+`LICENSE.RTX`).
 `upstream_alias.py` resolves their imports (`ARAX_query`,
 `Expand.expand_utilities`, `openapi_server.models.*`, `node_synonymizer`, ...)
 to the port's modules under `shepherd_utils/arax/`, so the same tests exercise
@@ -19,8 +20,7 @@ members instead of attributes; no `attributes` on aux graphs; no
 `NodeBinding.query_id` (the checks on it are removed); `schema_version`
 `2.0.0`. Each change is local, keeps upstream's structure and style, and is
 marked with a `# TRAPI 2.0:` comment, so `diff` against upstream's files still
-shows exactly what changed. Code that was already broken upstream (the TRAPI
-1.3 `result.edge_bindings` in a few live-only tests) is left as it is.
+shows exactly what changed.
 
 ## In CI (offline)
 
@@ -32,7 +32,7 @@ offline on upstream too. The two xfails are the port's recorded difference
 DEC-4 (xCRG uses Shepherd's Retriever).
 
 `test_node_normalizer_url_by_maturity` and `test_name_resolver_url_by_maturity`
-come from RTXteam/RTX#2913, after the pin above. Upstream's versions fake the
+come from RTXteam/RTX#2913. Upstream's versions fake the
 bare `RTXConfiguration` module, which the port doesn't import, so these set
 `settings.server_maturity` and run the port's real `RTXConfiguration`.
 
