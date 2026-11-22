@@ -561,7 +561,7 @@ qedge, with creative-treats widening.
 | ID | Functionality | Details |
 |---|---|---|
 | RTF-01 | Scope | Every non-KG2 plan. Skipped when there are no results, for pathfinder QGs, and for xCRG. Requires the original QG (`NoOriginalQG`). |
-| RTF-02 | Virtual edges → aux graphs | For `analyses[0]` only: bound qedges not in the original QG are grouped by option group, and each group becomes an aux graph `aux_graph_{sorted ids \| count}{_group}`. `creative_*` groups are attached as `biolink:support_graphs` on the inferred edge(s); the source is `infores:arax-xdtd` for `creative_DTD`, else `infores:arax`. Other groups go to `analysis.support_graphs`. |
+| RTF-02 | Virtual edges → aux graphs | For `analyses[0]` only: bound qedges not in the original QG are grouped by option group, and each group becomes an aux graph `aux_graph_{sorted ids \| count}{_group}`. `creative_*` groups are attached as `biolink:support_graphs` on the inferred edge(s); the source is `infores:arax`. Other groups go to `analysis.support_graphs`. |
 | RTF-03 | Binding cleanup | Deletes virtual edge/node bindings and prunes orphan subclass-parent node bindings. |
 | RTF-04 | **Creative NGD-inf filter** | When any inferred qedge exists: drops inferred bindings with no support graph, or whose support graph disconnects once `ngd=='inf'` edges are removed (undirected). Drops results that lose an original-qedge binding. As a result, **plain lookup treats edges are removed in creative mode**. |
 | RTF-05 | Finalization | `total_results_count`, the FRS-07 prune, and `query_graph = original_query_graph`. |
@@ -574,8 +574,8 @@ qedge, with creative-treats widening.
 | INF-02 | Score and path lookup | `ExplainableDTD_v1.0_<tier>-all_with_paths.db`: `PREDICTION_SCORE_TABLE`, `PATH_RESULT_TABLE`. **No `ORDER BY`**: the top-N is taken in DB row order, and paths are cut unsorted (D-15). Empty scores give a warning ("not trained or score < 0.3"). |
 | INF-03 | Node/edge mapping | The same DB's `NODE_MAPPING_TABLE` and `EDGE_MAPPING_TABLE` hold categories, publications, sources chain, knowledge_level, agent_type, qualifiers and extra attributes. |
 | INF-04 | Subgraph build (`genrete_treat_subgraphs`) | Without a QG it creates `drug`/`disease` qnodes and a `treats` qedge (inferred). The open qnode's categories are overwritten (Disease+PhenotypicFeature or Drug+SmallMolecule+ChemicalEntity). Per hop length L it adds `creative_DTD_qnode_k` (`is_set`) and `creative_DTD_qedge_k` in `creative_DTD_option_group_g`. A path with a missing triple is skipped. A missing node or a `SELF_LOOP_RELATION` **stops all remaining paths for that pair** and leaves partial edges. Path-edge `qedge_keys` are overwritten, not appended. |
-| INF-05 | Prediction edge | `creative_DTD_prediction_{i}`, `biolink:treats`, `probability_treats` (`EDAM-DATA:0951`) = `str(tp_score)`, `created_datetime` **hard-coded "2026-06-28"**, `computational_model`/`prediction`, primary `infores:arax-xdtd`. |
-| INF-06 | Path-edge provenance | Keeps the upstream source chain (including `source_record_urls`) and appends `infores:arax-xdtd` as aggregator. |
+| INF-05 | Prediction edge | `creative_DTD_prediction_{i}`, `biolink:treats`, `probability_treats` (`EDAM-DATA:0951`) = `str(tp_score)`, `created_datetime` **hard-coded "2026-06-28"**, `computational_model`/`prediction`, primary `infores:arax`. |
+| INF-06 | Path-edge provenance | Keeps the upstream source chain (including `source_record_urls`) and appends `infores:arax` as aggregator. |
 | INF-07 | Result ordering | Internal Resultify(ignore_edge_direction). `score = essence_scores[essence]`, keyed by **name** (names can collide). Sort descending. The ranker does not run for pure `infer` DSL. |
 | INF-08 | `infer(action=chemical_gene_regulation_graph_expansion)` (legacy xCRG) | **Dead**: its models are no longer managed, and there are several bugs (D-16). Replaced by XCR-*. |
 

@@ -93,7 +93,7 @@ class InferUtilities:
         Uses the pipe-delimited resource_id/resource_role fields for fast lookup,
         falling back to parsing the full JSON sources array.
 
-        Returns 'infores:arax-xdtd' if no primary knowledge source is found.
+        Returns 'infores:arax' if no primary knowledge source is found.
         """
         resource_ids = edge_info.resource_id
         resource_roles = edge_info.resource_role
@@ -108,13 +108,13 @@ class InferUtilities:
                 sources = json.loads(edge_info.sources)
                 for s in sources:
                     if s.get('resource_role') == 'primary_knowledge_source':
-                        return s.get('resource_id', 'infores:arax-xdtd')
+                        return s.get('resource_id', 'infores:arax')
             except (json.JSONDecodeError, TypeError):
                 pass
-        return "infores:arax-xdtd"
+        return "infores:arax"
 
     @staticmethod
-    def _build_retrieval_sources(edge_info, kp='infores:arax-xdtd'):
+    def _build_retrieval_sources(edge_info, kp='infores:arax'):
         """Build TRAPI RetrievalSource objects from the Translator KG edge sources JSON.
 
         The sources form an ordered chain: the first entry is the primary_knowledge_source
@@ -125,7 +125,7 @@ class InferUtilities:
         Example chain from edge_info.sources:
           [infores:mgi (primary)] -> [infores:agrkb (aggregator, upstream=[infores:mgi])]
         becomes:
-          [infores:mgi (primary)] -> [infores:agrkb (aggregator)] -> [infores:arax-xdtd (aggregator)]
+          [infores:mgi (primary)] -> [infores:agrkb (aggregator)] -> [infores:arax (aggregator)]
         """
         fallback = [RetrievalSource(resource_id=kp, resource_role="primary_knowledge_source")]
         if not edge_info.sources:
@@ -153,7 +153,7 @@ class InferUtilities:
         ))
         return retrieval_sources
 
-    def __get_formated_edge_key(self, edge: Edge, primary_knowledge_source: str, kp: str = 'infores:arax-xdtd') -> str:
+    def __get_formated_edge_key(self, edge: Edge, primary_knowledge_source: str, kp: str = 'infores:arax') -> str:
         """Build an edge key for a knowledge graph edge.
 
         The edge key is a unique identifier for a knowledge graph edge.
@@ -240,7 +240,7 @@ class InferUtilities:
         self.option_global_iter = 0
         self.qedge_id = qedge_id
         message = self.response.envelope.message
-        self.kp = 'infores:arax-xdtd'
+        self.kp = 'infores:arax'
 
         # Check to make sure that the qedge_id either exists and is in the QG, or else does not exist and the QG is empty
         if qedge_id is not None:
