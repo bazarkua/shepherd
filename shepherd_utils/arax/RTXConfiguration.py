@@ -84,6 +84,11 @@ class RTXConfiguration:
         return self.kg2c_sqlite_path
 
     @property
+    def info_for_overlay_sqlite_path(self) -> str:
+        # upstream 090d73b71's name for the same file
+        return self.kg2c_sqlite_path
+
+    @property
     def autocomplete_path(self) -> str:
         return arax_db_path(ARAX_AUTOCOMPLETE)
 
@@ -118,8 +123,7 @@ class RTXConfiguration:
             ("cohd_database", ".db"),
             ("curie_to_pmids", ".sqlite"),
             ("curie_ngd", ".sqlite"),
-            ("kg2c_sqlite", ".sqlite"),
-            ("tier0_sqlite", ".sqlite"),
+            ("info_for_overlay_sqlite", ".sqlite"),
             ("fda_approved_drugs", ".pickle"),
             ("autocomplete", ".sqlite"),
             ("explainable_dtd_db", ".db"),
