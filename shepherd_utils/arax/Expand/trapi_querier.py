@@ -559,7 +559,7 @@ class TRAPIQuerier:
         if self.kp_infores_curie == "infores:rtx-kg2":
             body['return_minimal_metadata'] = True  # Don't want KG2 attributes because ARAX adds them later (faster)
 
-        # If sending a query to Retriever: specify Tier 1 only, unless tiers is already present
+        # If sending a query to Retriever: specify Tier 0 only, unless tiers is already present
         if self.kp_infores_curie == "infores:retriever":
             body.setdefault('parameters', {})
             if 'tiers' not in body['parameters']:

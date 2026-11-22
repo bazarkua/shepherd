@@ -30,6 +30,9 @@ from typing import Optional, Dict, Any
 from shepherd_utils.arax.RTXConfiguration import RTXConfiguration
 from shepherd_utils.config import settings
 
+# Expand queries Retriever with tiers=[0] (see trapi_querier.py), so the meta KG we advertise is the tier 0 one
+RETRIEVER_META_KG_TIER = 0
+
 
 def _backup_dir() -> str:
     os.makedirs(settings.arax_dbs_dir, exist_ok=True)
@@ -68,7 +71,9 @@ class KnowledgeSourceMetadata:
     def _fetch_retriever_meta_kg(self) -> Optional[Dict[str, Any]]:
         """Fetch meta knowledge graph from Retriever"""
         try:
-            response = requests.get(_retriever_meta_kg_url(), timeout=30)
+            response = requests.get(_retriever_meta_kg_url(),
+                                    params={"tier": RETRIEVER_META_KG_TIER},
+                                    timeout=30)
             if response.status_code == 200:
                 return response.json()
             else:
