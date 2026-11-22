@@ -230,15 +230,15 @@ def test_refresh_failure_is_recorded(kp, arax_kp_cache_store):
     assert get_result()[0] == _response()  # the old response is kept
 
 
-def test_refresh_retries_a_cached_timeout_after_a_minute(kp, arax_kp_cache_store):
+def test_a_cached_timeout_is_retried_by_a_lookup_after_a_minute(kp, arax_kp_cache_store):
     kp.reply = TimeoutError()
     get_result()
     _, query_hash = _record(arax_kp_cache_store)
     kp.reply = (_response(), 200, 0.5, None)
-    KPQueryCacher().refresh_cache()
-    assert len(kp.calls) == 1  # too recent
     _age(arax_kp_cache_store, query_hash, 2 * tqc.AGE_BEFORE_TIMEOUT_RETRY_HOURS)
     KPQueryCacher().refresh_cache()
+    assert len(kp.calls) == 1  # the refresh never retries a timeout
+    assert get_result()[:2] == (_response(), 200)
     assert len(kp.calls) == 2
 
 

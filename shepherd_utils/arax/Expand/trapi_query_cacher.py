@@ -19,7 +19,7 @@
 #     the file, after which store_response for that query gives up)
 #   - a data-store error in a lookup is a miss, and in a store skips it (upstream's
 #     SQLite is local; a transient Redis error should not fail the KP query); so is a
-#     bad timestamp in a non-http entry's age check
+#     bad timestamp in a non-http entry's or a cached timeout's age check
 #   - total_cache_size_MiB is the stored (compressed) response size
 #   - main(): the --query_number test query (hard-wired KP URLs) is dropped
 #   - TRAPI 2.0: the key is still the sha256 of {url, body}, so 2.0 request bodies (constraints
@@ -362,6 +362,14 @@ class KPQueryCacher:
                     eprint(f"Cached {record['kp_curie']} entry is {age_hours:.1f} hours old; treating as a cache miss")
                     return None, NO_CACHED_RESPONSE, time.time() - start_time, None
 
+            # refresh_cache() never retries timeouts, so only reuse a cached timeout briefly and then let the caller query the KP again
+            if (record['last_refresh_http_code'] or record['first_query_http_code']) == -1:
+                cached_at = datetime.strptime(record['first_request_datetime'], '%Y-%m-%d %H:%M:%S')
+                age_hours = (datetime.now() - cached_at).total_seconds() / 3600
+                if age_hours > AGE_BEFORE_TIMEOUT_RETRY_HOURS:
+                    eprint(f"Cached {record['kp_curie']} timeout is {age_hours:.2f} hours old; treating as a cache miss")
+                    return None, NO_CACHED_RESPONSE, time.time() - start_time, None
+
             # Found a record, update stats (and keep it for another TTL)
             record['n_requests'] += 1
             record['last_request_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -586,6 +594,10 @@ class KPQueryCacher:
 
             #### Skip non http entries
             if not cached_query['query_url'].startswith('http'):
+                continue
+
+            #### Don't refresh timed-out queries: a query too heavy to finish keeps the KP busy long after we give up
+            if cached_query['first_query_http_code'] == -1:
                 continue
 
             time_now = datetime.now()
