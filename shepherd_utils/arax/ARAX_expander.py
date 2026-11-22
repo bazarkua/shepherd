@@ -3,7 +3,8 @@
 #   - import paths / sys.path hacks only
 #   - every KP query goes to infores:retriever (DEC-4); with a user-specified kp list, Retriever is queried with that list forwarded as parameters.kp (DEC-10), and every other valid KP is marked Skipped in the query plan (DEC-12)
 #   - the kp parameter is no longer validated against valid_kps (InvalidKP); it is kept exactly as given, since Retriever decides what is valid (DEC-10)
-#   - single-node queries go to infores:retriever instead of infores:rtx-kg2 (DEC-4), with the kp list forwarded
+#   - single-node queries go to infores:retriever instead of infores:rtx-kg2 (DEC-4), with the kp list forwarded,
+#     and their answers get the qnode post-filters (the FDA constraint) as a qedge's answer does
 #   - the FDA-approved-drugs pickle path comes from RTXConfiguration.fda_approved_drugs_path (DEC-6)
 #   - the unused plover_url attribute is dropped (dead code, DEC-5)
 #   - TRAPI 2.0: qedge attribute constraints and qualifier sets are read from qedge.constraints
@@ -618,6 +619,10 @@ class ARAXExpander:
                 self._merge_answer_into_message_kg(answer_kg, overarching_kg, message.query_graph, query_graph, log)
                 if log.status != 'OK':
                     return response
+                # The FDA constraint is not sent to the KP (upstream 2add49863), so apply it here too, after the
+                # merge as for a qedge's answer: the merge adds any subclass_of qedge whose edges it must remove
+                if overarching_kg.nodes_by_qg_id.get(qnode_key):
+                    self._apply_qnode_post_filters(None, query_graph, overarching_kg, log, qnode_keys={qnode_key})
 
         # Get rid of any lingering expand-added subclass self-qedges that are no longer relevant (edges pruned)
         all_qedge_keys = set(message.query_graph.edges or {})
@@ -751,13 +756,15 @@ class ARAXExpander:
 
     def _apply_qnode_post_filters(
         self,
-        qedge_key: str,
+        qedge_key: Optional[str],
         query_graph: QueryGraph,
         overarching_kg: QGOrganizedKnowledgeGraph,
         log: ARAXResponse,
+        qnode_keys: Optional[set[str]] = None,
     ) -> None:
-        qedge = query_graph.edges[qedge_key]
-        qnode_keys = {qedge.subject, qedge.object}
+        if qnode_keys is None:
+            qedge = query_graph.edges[qedge_key]
+            qnode_keys = {qedge.subject, qedge.object}
         qnode_keys_with_answers = qnode_keys.intersection(set(overarching_kg.nodes_by_qg_id))
         for qnode_key in qnode_keys_with_answers:
             qnode = query_graph.nodes[qnode_key]

@@ -370,7 +370,7 @@ the template choice, not just the operations.
 |---|---|
 | EXP-07 | Blocked KPs: `infores:automat-robokop` and `infores:knowledge-collaboratory` are recorded as "Skipped". |
 | EXP-08 | Self-qedges are an error unless the predicate is `subclass_of`. A disconnected required QG is an error. At least one pinned qnode is required. |
-| EXP-09 | Constraint whitelist. qnode: `biolink:highest_FDA_approval_status == "regular approval"` only. qedge: `knowledge_source` / `primary_knowledge_source` / `aggregator_knowledge_source` with `==`. Anything else is `UnsupportedConstraint`. Qualifier constraints are passed to KPs unchanged. Since upstream 2add49863 the FDA constraint is no longer sent to the KP; Expand applies it to each qedge's answer, as it already did. |
+| EXP-09 | Constraint whitelist. qnode: `biolink:highest_FDA_approval_status == "regular approval"` only. qedge: `knowledge_source` / `primary_knowledge_source` / `aggregator_knowledge_source` with `==`. Anything else is `UnsupportedConstraint`. Qualifier constraints are passed to KPs unchanged. Since upstream 2add49863 the FDA constraint is no longer sent to the KP; Expand applies it to each qedge's answer, as it already did. The port also applies it to a single-node answer (DEC-4), which upstream no longer answers (615baff37). |
 | EXP-10 | Categories. A pinned qnode gets `categories=None`. Otherwise Biolink conflations are added (Gene≡Protein; Disease≡PhenotypicFeature≡DiseaseOrPhenotypicFeature). No categories becomes `NamedThing`. |
 | EXP-11 | Predicates are canonicalized. All non-canonical flips the qedge; a mix is an error. `treats*` with a Disease subject flips (only when the subject is unpinned). No predicate becomes `related_to`. |
 
