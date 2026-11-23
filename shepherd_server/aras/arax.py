@@ -439,6 +439,21 @@ async def _load_stored_response(response_id: str):
     return await _run_in_pool(finish_stored_response, response_id, parameters, logs)
 
 
+async def _is_ars_message(message_id: str) -> bool:
+    """``get_response``'s ``is_ars_id``: Shepherd's ARS keeps its payloads in
+    the same store as Shepherd's responses, under the ARS PK (a UUID, like
+    Shepherd's response ids), so its registry tells which one an id is."""
+    import uuid
+
+    from shepherd_utils.ars import db as ars_db
+
+    try:
+        uuid.UUID(message_id)
+    except ValueError:
+        return False
+    return await ars_db.get_message_row(message_id) is not None
+
+
 @ARAX.get("/response/{response_id}")
 async def get_response(response_id: str) -> Response:
     """A stored response: Shepherd's, or an ARS message from Shepherd's ARS (API-07)."""
@@ -451,6 +466,7 @@ async def get_response(response_id: str) -> Response:
         ars_host=ars_host(),
         run=_run_in_pool,
         load_local=_load_stored_response,
+        is_ars_id=_is_ars_message,
     )
     return _arax_json(result)
 

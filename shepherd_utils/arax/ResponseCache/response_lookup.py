@@ -3,7 +3,9 @@
 # Changes from upstream (DEC-3 in docs/ARAX_PORT_BASELINE.md):
 #   - responses are read from Shepherd's storage, not MySQL + S3 + local files.
 #     ARAX's local ids are integers; Shepherd's are its response ids, so any id
-#     that is not URL-like or ARS-like (len > 30) is looked up there
+#     that is not URL-like or ARS-like (len > 30) is looked up there. Shepherd's
+#     ids are UUIDs, as long as ARS PKs, so a long id goes to ARS only when the
+#     injected is_ars_id says Shepherd's ARS has that message
 #   - a short id with the UI's X prefix (the UI adds it to every non-numeric id)
 #     is looked up without it: Shepherd's response ids are hex, not ARAX's
 #     integers, so the UI's load-by-id, ?r= links and history would otherwise
@@ -28,7 +30,8 @@
 #     an RFC 3339 timestamp with offset, as 2.0 LogEntry requires; the X view's
 #     stripped node/edge `attributes` and edge `sources` are omitted, not null
 #   - get_response takes an optional load_local (an async loader for a Shepherd
-#     response id), so the server can finish its stored form; default: upstream's
+#     response id), so the server can finish its stored form, and an optional
+#     is_ars_id (see above); default: upstream's
 # Everything else -- the branch order, the validator calls and result shapes,
 # the error tuples, the actor lookups, the attribute stripping, the size
 # strings -- is upstream's, including its quirks (DEC-1): the URL branch refers
@@ -479,7 +482,7 @@ def finish_ars_child_response(response_id, original_response_id, attribute_cachi
 
 ##################################################################################################
 #### Fetch a stored response (upstream's get_response control flow)
-async def get_response(response_id, *, fetch_url, fetch_ars, ars_host, run, load_local=None):
+async def get_response(response_id, *, fetch_url, fetch_ars, ars_host, run, load_local=None, is_ars_id=None):
     """
     fetch_url(url) -> (status_code, content bytes); raises on a connection error
     fetch_ars(pk, trace) -> (status_code, content bytes) from Shepherd's ARS
@@ -487,6 +490,8 @@ async def get_response(response_id, *, fetch_url, fetch_ars, ars_host, run, load
     load_local(response_id) -> awaitable returning a Shepherd response, finished
         (validated and summarized, as load_and_finish_local_response does), or an
         error tuple; by default run(load_and_finish_local_response, response_id)
+    is_ars_id(pk) -> awaitable bool, whether Shepherd's ARS knows this message;
+        when given, a long id it doesn't know is a Shepherd response
     """
 
     if response_id is None:
@@ -530,6 +535,20 @@ async def get_response(response_id, *, fetch_url, fetch_ars, ars_host, run, load
         #### If it started with Z, this is a special temporary cache, and if it's not there, all is lost
         if response_id.startswith('Z'):
             return( { "status": 404, "title": f"Cached component not found", "detail": f"The component cache has been cleared since the initial request. Refresh the entire response", "type": "about:blank" }, 404)
+
+        #### Shepherd: its own response ids are UUIDs too, as long as ARS PKs, and its ARS keeps its
+        #### payloads in the same store under the PK, so the ARS registry decides: an id it doesn't
+        #### know is a Shepherd response, looked up without the UI's X as a short id is
+        ars_id = response_id[1:] if response_id.startswith('X') else response_id
+        if is_ars_id is not None:
+            try:
+                is_ars = await is_ars_id(ars_id)
+            except Exception as e:
+                return( { "status": 404, "title": f"Remote host {ars_host} unavailable", "detail": f"Connection attempts to {ars_host} triggered an exception: {e}", "type": "about:blank" }, 404)
+            if not is_ars:
+                if load_local is not None:
+                    return await load_local(ars_id)
+                return await run(load_and_finish_local_response, ars_id)
 
         #### If the UUID starts with X, then enable attribute stripping mode and attribute caching, which makes the GUI faster
         attribute_caching = False

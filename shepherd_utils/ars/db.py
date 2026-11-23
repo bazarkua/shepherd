@@ -562,7 +562,8 @@ async def clear_subscriptions(message_id: Union[str, uuid.UUID]) -> None:
 # Payload blobs
 #
 # Hot path: Shepherd's Redis data store, keyed by str(message_pk) (a full
-# UUID, so it can't collide with Shepherd's 8-char ids). Durable copy,
+# UUID, like Shepherd's own response ids; /arax/response asks this registry
+# which one an id is). Durable copy,
 # written when a message goes terminal: a file under ars_payload_dir when
 # that is set (payload_store), else the ars_message.data bytea column. Reads
 # try Redis first and fall back to (and re-warm from) the durable copy; a
